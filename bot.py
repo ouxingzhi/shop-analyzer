@@ -3,6 +3,7 @@ Telegram Bot 主程序
 """
 import logging
 from typing import List
+from datetime import datetime
 
 from telegram import Update
 from telegram.ext import (
@@ -17,6 +18,7 @@ from config import config
 from services.tokenizer_service import tokenizer_service
 from services.search_service import search_service, SearchResult
 from services.analysis_service import analysis_service
+from services.excel_service import excel_service
 
 # 配置日志
 logging.basicConfig(
@@ -196,13 +198,23 @@ async def process_shops(
         )
 
         # 3. AI 分析
-        report = await analysis_service.analyze_shops(search_results)
+        report, matched_companies = await analysis_service.analyze_shops(search_results)
 
-        # 4. 发送报告
-        await status_message.edit_text("✅ 分析完成，生成报告中...")
+        # 4. 生成 Excel 报告
+        await status_message.edit_text("✅ 分析完成，生成 Excel 报告...")
 
-        # 分割长消息发送
-        await send_long_message(update, report)
+        # 生成 Excel 文件
+        excel_file = excel_service.generate_report(search_results, report, matched_companies)
+
+        # 发送 Excel 文件
+        await update.message.reply_document(
+            document=excel_file,
+            filename=f"shop_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+            caption="📊 店铺分析报告"
+        )
+
+        # 发送简要分析结果
+        await update.message.reply_text(f"✅ 分析完成！共处理 {len(search_results)} 个店铺。\n\n" + report[:500] + "..." if len(report) > 500 else report)
 
         # 保存搜索结果到上下文（可选）
         context.user_data["search_results"] = search_results
