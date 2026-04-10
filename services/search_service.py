@@ -146,7 +146,7 @@ class SearchService:
         批量搜索多个店铺（串行执行，避免被封）
 
         Args:
-            shops: 店铺列表，每项包含 name 和 keywords
+            shops: 店铺列表，每项包含 name（清理后）、original_name（原始）、keywords
 
         Returns:
             搜索结果列表
@@ -154,13 +154,16 @@ class SearchService:
         results = []
         for shop in shops:
             # 串行搜索，避免并发请求被封禁
+            # 搜索用清理后的名称，结果中保留原始名称
             result = await self.search_shop(shop["name"], shop["keywords"])
             if result:
+                # 用原始名称替换
+                result.shop_name = shop.get("original_name", shop["name"])
                 results.append(result)
             else:
                 # 如果搜索失败，创建一个空结果
                 results.append(SearchResult(
-                    shop_name=shop["name"],
+                    shop_name=shop.get("original_name", shop["name"]),
                     keywords=shop["keywords"],
                     info="搜索失败",
                     company_list=[],
