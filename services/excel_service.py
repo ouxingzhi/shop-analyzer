@@ -54,12 +54,12 @@ class ExcelService:
 
         # 标题行
         ws.merge_cells('A1:K1')
-        ws['A1'] = f"店铺分析报告 - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        ws['A1'] = f"Shop Analysis Report - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
         ws['A1'].font = self.title_font
         ws['A1'].alignment = Alignment(horizontal='center')
 
         # 表头
-        headers = ['店铺名称', '公司名称', '法人', '状态', '注册资本', '成立日期', '地址', '电话', '邮箱', '统一信用代码', '匹配结果']
+        headers = ['Shop Name', 'Company Name', 'Legal Person', 'Status', 'Reg Capital', 'Establish Date', 'Address', 'Phone', 'Email', 'Credit Code', 'Match Result']
         row = 3
         for col, header in enumerate(headers, 1):
             cell = ws.cell(row=row, column=col, value=header)
@@ -120,7 +120,7 @@ class ExcelService:
                     if matched_companies:
                         matched = matched_companies.get(result.shop_name, '')
                         if matched == company.get('name', ''):
-                            matched_cell = ws.cell(row=row, column=11, value='✓ 匹配')
+                            matched_cell = ws.cell(row=row, column=11, value='Matched')
                             matched_cell.font = Font(color='00B050', bold=True)
                             matched_cell.border = self.border
                         else:
@@ -132,7 +132,7 @@ class ExcelService:
             else:
                 # 没有搜索到公司
                 ws.cell(row=row, column=1, value=result.shop_name).border = self.border
-                ws.cell(row=row, column=2, value='未找到相关企业').border = self.border
+                ws.cell(row=row, column=2, value='No company found').border = self.border
                 for col in range(3, 12):
                     ws.cell(row=row, column=col, value='').border = self.border
                 row += 1
@@ -145,7 +145,7 @@ class ExcelService:
         # AI 分析结果（放在最后）
         row += 2
         ws.merge_cells(f'A{row}:K{row}')
-        ws.cell(row=row, column=1, value='AI 分析结果').font = self.title_font
+        ws.cell(row=row, column=1, value='AI Analysis Result').font = self.title_font
         
         row += 1
         ws.merge_cells(f'A{row}:K{row+10}')
