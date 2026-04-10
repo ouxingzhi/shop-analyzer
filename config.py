@@ -17,11 +17,11 @@ class TelegramConfig:
 
 
 @dataclass
-class DashScopeConfig:
-    """阿里云 DashScope（通义千问）配置"""
-    api_key: str = os.getenv("DASHSCOPE_API_KEY", "")
-    model: str = os.getenv("DASHSCOPE_MODEL", "qwen-plus")
-    max_tokens: int = int(os.getenv("DASHSCOPE_MAX_TOKENS", "2000"))
+class AIConfig:
+    """AI 模型配置（百炼 GLM-5）"""
+    api_key: str = os.getenv("AI_API_KEY", "sk-sp-7a2ad6970c2b4985a640e800d44ffaad")
+    model: str = os.getenv("AI_MODEL", "glm-5")
+    max_tokens: int = int(os.getenv("AI_MAX_TOKENS", "2000"))
 
 
 @dataclass
@@ -34,7 +34,7 @@ class SearchConfig:
 class AppConfig:
     """应用配置"""
     telegram: TelegramConfig
-    dashscope: DashScopeConfig
+    ai: AIConfig
     search: SearchConfig
     debug: bool = os.getenv("DEBUG", "false").lower() == "true"
 
@@ -43,7 +43,7 @@ def load_config() -> AppConfig:
     """加载配置"""
     return AppConfig(
         telegram=TelegramConfig(),
-        dashscope=DashScopeConfig(),
+        ai=AIConfig(),
         search=SearchConfig(),
         debug=os.getenv("DEBUG", "false").lower() == "true"
     )

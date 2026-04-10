@@ -192,7 +192,7 @@ async def process_shops(
         )
 
         # 3. AI 分析
-        report = analysis_service.analyze_shops(search_results)
+        report = await analysis_service.analyze_shops(search_results)
 
         # 4. 发送报告
         await status_message.edit_text("✅ 分析完成，生成报告中...")
@@ -234,8 +234,8 @@ def main() -> None:
         logger.error("未设置 TELEGRAM_BOT_TOKEN 环境变量")
         return
 
-    if not config.dashscope.api_key:
-        logger.error("未设置 DASHSCOPE_API_KEY 环境变量")
+    if not config.ai.api_key:
+        logger.error("未设置 AI_API_KEY 环境变量")
         return
 
     # 创建应用
