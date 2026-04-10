@@ -26,9 +26,7 @@ class DashScopeConfig:
 
 @dataclass
 class SearchConfig:
-    """搜索 API 配置"""
-    base_url: str = os.getenv("SEARCH_API_URL", "http://localhost:3000")  # API 服务地址
-    api_type: str = os.getenv("SEARCH_API_TYPE", "tianyancha")  # tianyancha 或 qichacha
+    """搜索配置"""
     timeout: int = int(os.getenv("SEARCH_TIMEOUT", "30"))
 
 
