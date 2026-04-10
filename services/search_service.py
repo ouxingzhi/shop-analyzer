@@ -173,19 +173,22 @@ class SearchService:
             )
         return "\n".join(info_lines)
 
-    async def search_multiple(self, shops: List[Dict[str, Any]]) -> List[SearchResult]:
+    async def search_multiple(self, shops: List[Dict[str, Any]], progress_callback=None) -> List[SearchResult]:
         """
-        批量搜索多个店铺（串行执行，避免被封）
+        批量搜索多个店铺（串行执行，限流：每秒最多2次请求）
 
         Args:
             shops: 店铺列表，每项包含 name（清理后）、original_name（原始）
+            progress_callback: 进度回调函数
 
         Returns:
             搜索结果列表
         """
         results = []
-        for shop in shops:
-            # 串行搜索，避免并发请求被封禁
+        total = len(shops)
+        
+        for i, shop in enumerate(shops, 1):
+            # 串行搜索，限流：每秒最多2次请求（间隔0.5秒）
             result = await self.search_shop(shop["name"])
             if result:
                 # 用原始名称替换
@@ -200,8 +203,14 @@ class SearchService:
                     company_list=[],
                     raw_data={}
                 ))
-            # 添加延迟，避免请求过快
-            await asyncio.sleep(0.5)
+            
+            # 进度回调
+            if progress_callback:
+                await progress_callback(i, total)
+            
+            # 限流：每秒最多2次请求（间隔0.5秒）
+            if i < total:
+                await asyncio.sleep(0.5)
 
         return results
 

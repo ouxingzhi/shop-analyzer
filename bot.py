@@ -134,18 +134,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         )
         return
 
-    if len(shops) > 20:
-        await update.message.reply_text(
-            f"店铺数量过多（{len(shops)}个），请限制在 20 个以内。"
-        )
-        return
-
     # 缓存店铺列表
     context.user_data["shops"] = shops
 
     await update.message.reply_text(
         f"✅ 已收到 {len(shops)} 个店铺名称，开始分析...\n\n"
-        f"店铺列表:\n" + "\n".join(f"• {shop}" for shop in shops)
+        f"店铺列表:\n" + "\n".join(f"• {shop}" for shop in shops[:10]) + ("\n..." if len(shops) > 10 else "")
     )
 
     await process_shops(update, context, shops)
@@ -181,12 +175,17 @@ async def process_shops(
             logger.info(f"清理：{shop} -> {cleaned_name}")
 
         await status_message.edit_text(
-            f"✅ 分词完成，共 {len(tokenized_shops)} 个店铺\n"
-            f"🌐 开始搜索..."
+            f"✅ 清理完成，共 {len(tokenized_shops)} 个店铺\n"
+            f"🌐 开始搜索（限流: 2次/秒）..."
         )
 
-        # 2. 搜索
-        search_results = await search_service.search_multiple(tokenized_shops)
+        # 2. 搜索（带进度更新）
+        async def update_progress(current, total):
+            await status_message.edit_text(
+                f"🔍 搜索中... {current}/{total} ({current*100//total}%)"
+            )
+
+        search_results = await search_service.search_multiple(tokenized_shops, progress_callback=update_progress)
 
         if not search_results:
             await status_message.edit_text("⚠️ 搜索失败，请稍后重试。")
