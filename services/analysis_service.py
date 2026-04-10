@@ -87,7 +87,7 @@ class AnalysisService:
 
             info = f"""
 {i}. 店铺名称：{result.shop_name}
-   搜索关键词：{", ".join(result.keywords)}
+   搜索名称：{result.search_name}
    搜索结果：{company_detail if company_detail else "未找到相关企业"}
 """
             shop_info.append(info)
@@ -102,7 +102,7 @@ class AnalysisService:
 【分析要求】
 1. 分析各店铺之间的关联性（如：是否属于同一行业、是否存在竞争或合作关系、是否属于同一法人）
 2. 识别店铺的业务特点和行业定位
-3. 分析搜索关键词与实际企业的匹配程度
+3. 分析搜索名称与实际企业的匹配程度
 4. 提供综合性的商业洞察和建议
 
 【输出格式】

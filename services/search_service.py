@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class SearchResult:
     """搜索结果"""
     shop_name: str
-    keywords: List[str]
+    search_name: str  # 实际搜索的名称（清理后）
     info: str
     company_list: List[Dict[str, Any]]  # 搜索到的公司列表
     raw_data: Dict[str, Any]
@@ -53,13 +53,12 @@ class SearchService:
             'Cookie': f'HWWAFSESID=54f151b79a5c0aa1566; HWWAFSESTIME={timestamp}'
         }
 
-    async def search_shop(self, shop_name: str, keywords: List[str]) -> Optional[SearchResult]:
+    async def search_shop(self, shop_name: str) -> Optional[SearchResult]:
         """
         搜索企业信息（直接调用天眼查 API）
 
         Args:
-            shop_name: 店铺/企业名称
-            keywords: 分词后的关键词列表
+            shop_name: 店铺/企业名称（清理后）
 
         Returns:
             搜索结果
@@ -83,8 +82,8 @@ class SearchService:
                     company_list = self._extract_company_list(data)
                     info = self._format_company_info(company_list)
                     return SearchResult(
-                        shop_name=shop_name,
-                        keywords=keywords,
+                        shop_name=shop_name,  # 这里先用搜索名称，后面会被替换成原始名称
+                        search_name=shop_name,
                         info=info,
                         company_list=company_list,
                         raw_data=data
@@ -146,7 +145,7 @@ class SearchService:
         批量搜索多个店铺（串行执行，避免被封）
 
         Args:
-            shops: 店铺列表，每项包含 name（清理后）、original_name（原始）、keywords
+            shops: 店铺列表，每项包含 name（清理后）、original_name（原始）
 
         Returns:
             搜索结果列表
@@ -154,8 +153,7 @@ class SearchService:
         results = []
         for shop in shops:
             # 串行搜索，避免并发请求被封禁
-            # 搜索用清理后的名称，结果中保留原始名称
-            result = await self.search_shop(shop["name"], shop["keywords"])
+            result = await self.search_shop(shop["name"])
             if result:
                 # 用原始名称替换
                 result.shop_name = shop.get("original_name", shop["name"])
@@ -164,7 +162,7 @@ class SearchService:
                 # 如果搜索失败，创建一个空结果
                 results.append(SearchResult(
                     shop_name=shop.get("original_name", shop["name"]),
-                    keywords=shop["keywords"],
+                    search_name=shop["name"],
                     info="搜索失败",
                     company_list=[],
                     raw_data={}

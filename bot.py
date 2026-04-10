@@ -167,19 +167,16 @@ async def process_shops(
     status_message = await update.message.reply_text("🔍 正在进行分词处理...")
 
     try:
-        # 1. 分词
+        # 1. 清理店铺名称
         tokenized_shops = []
         for shop in shops:
             # 清理店铺名称（去除旗舰店、专营店等）
             cleaned_name = tokenizer_service.clean_shop_name(shop)
-            keywords = tokenizer_service.tokenize_for_search(shop)
-            # 搜索时使用清理后的名称，保留原始名称用于显示
             tokenized_shops.append({
                 "name": cleaned_name,  # 用于搜索
-                "original_name": shop,  # 原始名称用于显示
-                "keywords": keywords
+                "original_name": shop  # 原始名称用于显示
             })
-            logger.info(f"分词：{shop} -> 清理后：{cleaned_name} -> 关键词：{keywords}")
+            logger.info(f"清理：{shop} -> {cleaned_name}")
 
         await status_message.edit_text(
             f"✅ 分词完成，共 {len(tokenized_shops)} 个店铺\n"
