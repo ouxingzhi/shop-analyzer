@@ -218,7 +218,7 @@ async def send_long_message(update: Update, text: str) -> None:
     chunks = [text[i : i + max_length] for i in range(0, len(text), max_length)]
 
     for chunk in chunks:
-        await update.message.reply_text(chunk, parse_mode="Markdown")
+        await update.message.reply_text(chunk)
 
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
