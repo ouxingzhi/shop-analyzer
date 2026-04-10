@@ -117,7 +117,7 @@ class AnalysisService:
             company_detail = ""
             if result.company_list:
                 for j, company in enumerate(result.company_list[:3], 1):
-                    company_detail += f"\n      {j}. {company.get('name', '未知')} | 法人: {company.get('legalPerson', '未知')} | 状态: {company.get('regStatus', '未知')} | 注册资本: {company.get('capital', '未知')}"
+                    company_detail += f"\n      {j}. {company.get('name', '未知')} | 法人: {company.get('legalPerson', '未知')} | 状态: {company.get('regStatus', '未知')} | 电话: {company.get('phone', '无')} | 邮箱: {company.get('email', '无')}"
 
             info = f"""
 {i}. 店铺名称：{result.shop_name}

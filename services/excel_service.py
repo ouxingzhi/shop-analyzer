@@ -47,19 +47,19 @@ class ExcelService:
         ws = wb.active
         ws.title = "店铺分析报告"
 
-        # 设置列宽
-        column_widths = [20, 30, 15, 15, 20, 15, 30, 50]
+        # 设置列宽 - 增加电话、邮箱列
+        column_widths = [18, 30, 10, 10, 18, 12, 30, 15, 25, 15, 30]
         for i, width in enumerate(column_widths, 1):
             ws.column_dimensions[get_column_letter(i)].width = width
 
         # 标题行
-        ws.merge_cells('A1:H1')
+        ws.merge_cells('A1:K1')
         ws['A1'] = f"店铺分析报告 - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
         ws['A1'].font = self.title_font
         ws['A1'].alignment = Alignment(horizontal='center')
 
         # 表头
-        headers = ['店铺名称', '公司名称', '法人', '状态', '注册资本', '成立日期', '地址', '匹配结果']
+        headers = ['店铺名称', '公司名称', '法人', '状态', '注册资本', '成立日期', '地址', '电话', '邮箱', '统一信用代码', '匹配结果']
         row = 3
         for col, header in enumerate(headers, 1):
             cell = ws.cell(row=row, column=col, value=header)
@@ -89,8 +89,7 @@ class ExcelService:
                     ws.cell(row=row, column=1, value=result.shop_name).border = self.border
                     
                     # 公司名称
-                    company_cell = ws.cell(row=row, column=2, value=company.get('name', ''))
-                    company_cell.border = self.border
+                    ws.cell(row=row, column=2, value=company.get('name', '')).border = self.border
                     
                     # 法人
                     ws.cell(row=row, column=3, value=company.get('legalPerson', '')).border = self.border
@@ -107,25 +106,34 @@ class ExcelService:
                     # 地址
                     ws.cell(row=row, column=7, value=company.get('address', '')).border = self.border
                     
+                    # 电话
+                    ws.cell(row=row, column=8, value=company.get('phone', '')).border = self.border
+                    
+                    # 邮箱
+                    ws.cell(row=row, column=9, value=company.get('email', '')).border = self.border
+                    
+                    # 统一信用代码
+                    ws.cell(row=row, column=10, value=company.get('creditCode', '')).border = self.border
+                    
                     # 匹配结果
                     matched = ''
                     if matched_companies:
                         matched = matched_companies.get(result.shop_name, '')
                         if matched == company.get('name', ''):
-                            matched_cell = ws.cell(row=row, column=8, value='✓ 匹配')
+                            matched_cell = ws.cell(row=row, column=11, value='✓ 匹配')
                             matched_cell.font = Font(color='00B050', bold=True)
                             matched_cell.border = self.border
                         else:
-                            ws.cell(row=row, column=8, value=matched).border = self.border
+                            ws.cell(row=row, column=11, value='').border = self.border
                     else:
-                        ws.cell(row=row, column=8, value='').border = self.border
+                        ws.cell(row=row, column=11, value='').border = self.border
                     
                     row += 1
             else:
                 # 没有搜索到公司
                 ws.cell(row=row, column=1, value=result.shop_name).border = self.border
                 ws.cell(row=row, column=2, value='未找到相关企业').border = self.border
-                for col in range(3, 9):
+                for col in range(3, 12):
                     ws.cell(row=row, column=col, value='').border = self.border
                 row += 1
 
@@ -136,11 +144,11 @@ class ExcelService:
 
         # AI 分析结果（放在最后）
         row += 2
-        ws.merge_cells(f'A{row}:H{row}')
+        ws.merge_cells(f'A{row}:K{row}')
         ws.cell(row=row, column=1, value='AI 分析结果').font = self.title_font
         
         row += 1
-        ws.merge_cells(f'A{row}:H{row+10}')
+        ws.merge_cells(f'A{row}:K{row+10}')
         analysis_cell = ws.cell(row=row, column=1, value=analysis_result)
         analysis_cell.alignment = Alignment(wrap_text=True, vertical='top')
 

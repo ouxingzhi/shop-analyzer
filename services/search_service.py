@@ -79,7 +79,9 @@ class SearchService:
             async with session.post(self.search_url, json=payload, headers=headers) as response:
                 if response.status == 200:
                     data = await response.json()
+                    logger.info(f"天眼查API返回: {str(data)[:1000]}")  # 日志输出
                     company_list = self._extract_company_list(data)
+                    logger.info(f"提取到的公司列表: {len(company_list)} 个")
                     info = self._format_company_info(company_list)
                     return SearchResult(
                         shop_name=shop_name,  # 这里先用搜索名称，后面会被替换成原始名称
@@ -106,19 +108,48 @@ class SearchService:
 
     def _extract_company_list(self, data: Dict[str, Any]) -> List[Dict[str, Any]]:
         """从搜索响应中提取公司列表"""
+        import re
         companies = []
 
-        # 天眼查响应格式
-        if "result" in data and "resultList" in data.get("result", {}):
-            for item in data["result"]["resultList"]:
+        # 天眼查响应格式 - 新格式
+        if "data" in data and "companyList" in data.get("data", {}):
+            for item in data["data"]["companyList"]:
+                # 清理公司名中的 <em> 标签
+                name = item.get("name", "")
+                name = re.sub(r'</?em>', '', name)
+                
                 companies.append({
-                    "name": item.get("name", ""),
+                    "name": name,
+                    "id": item.get("id", ""),
+                    "legalPerson": item.get("legalPersonName", "") or item.get("legalPerson", ""),
+                    "regStatus": item.get("regStatus", "") or item.get("status", ""),
+                    "capital": item.get("regCapital", "") or item.get("capital", ""),
+                    "establishDate": item.get("estiblishTime", "") or item.get("establishDate", ""),
+                    "address": item.get("regLocation", "") or item.get("address", ""),
+                    "phone": item.get("phoneNum", "") or (item.get("phoneList", [""])[0] if item.get("phoneList") else ""),
+                    "email": item.get("emails", "") or (item.get("emailList", [""])[0] if item.get("emailList") else ""),
+                    "creditCode": item.get("creditCode", ""),
+                    "businessScope": item.get("businessScope", "")[:100] if item.get("businessScope") else "",
+                })
+
+        # 天眼查响应格式 - 旧格式（兼容）
+        elif "result" in data and "resultList" in data.get("result", {}):
+            for item in data["result"]["resultList"]:
+                name = item.get("name", "")
+                name = re.sub(r'</?em>', '', name)
+                
+                companies.append({
+                    "name": name,
                     "id": item.get("id", ""),
                     "legalPerson": item.get("legalPersonName", ""),
                     "regStatus": item.get("regStatus", ""),
                     "capital": item.get("regCapital", ""),
                     "establishDate": item.get("estiblishTime", ""),
-                    "address": item.get("address", ""),
+                    "address": item.get("regLocation", "") or item.get("address", ""),
+                    "phone": "",
+                    "email": "",
+                    "creditCode": "",
+                    "businessScope": "",
                 })
 
         return companies[:5]  # 最多取前5个
@@ -136,7 +167,9 @@ class SearchService:
                 f"   状态: {company['regStatus']}\n"
                 f"   注册资本: {company['capital']}\n"
                 f"   成立日期: {company['establishDate']}\n"
-                f"   地址: {company['address']}"
+                f"   地址: {company['address']}\n"
+                f"   电话: {company.get('phone', '')}\n"
+                f"   邮箱: {company.get('email', '')}"
             )
         return "\n".join(info_lines)
 
